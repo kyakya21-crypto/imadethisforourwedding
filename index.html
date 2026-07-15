@@ -37,13 +37,13 @@
 <title>최병옥 ♥ 이원지 결혼합니다</title>
 
 <meta property="og:type" content="website">
-<meta property="og:url"         content="https://your-site.vercel.app"> <!-- 교체 필요 -->
-<meta property="og:image"       content="https://your-site.vercel.app/hero.jpg"> <!-- 교체 필요 -->
-<meta property="og:title"       content="최병옥 ♥ 이원지"> <!-- 교체 필요 -->
-<meta property="og:description" content="2026년 11월 7일 토요일 · 국제웨딩컨벤션 펠리스홀"> <!-- 교체 필요 -->
+<meta property="og:url"         content="https://imadethisforourwedding.vercel.app">
+<meta property="og:image"       content="https://imadethisforourwedding.vercel.app/hero.jpg">
+<meta property="og:title"       content="최병옥 ♥ 이원지">
+<meta property="og:description" content="2026년 11월 7일 토요일 · 국제웨딩컨벤션 펠리스홀">
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9D%A4%EF%B8%8F%3C/text%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="https://your-site.vercel.app/hero.jpg"> <!-- 교체 필요 -->
+<link rel="apple-touch-icon" href="https://imadethisforourwedding.vercel.app/hero.jpg">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -950,7 +950,7 @@ footer .f-credit { font-size: 11px; opacity: 0.6; }
  * =================================================================== */
 
 /* ── 배포 URL (OG 태그·카카오 공유에만 사용) ── */
-const SITE_URL = 'https://your-site.vercel.app'; /* 교체 필요 : Vercel 배포 후 실제 주소로 교체 */
+const SITE_URL = 'https://imadethisforourwedding.vercel.app'; /* 교체 완료 */
 
 /* ── OG 이미지 (SNS·카카오톡 공유 시 표시되는 썸네일) ── */
 const OG_IMAGE = SITE_URL + '/hero.jpg';
@@ -1204,7 +1204,8 @@ document.getElementById('addCalBtn').addEventListener('click', function () {
 });
 
 /* ---------------- 지도 ---------------- */
-document.getElementById('mapFrame').src = ''; /* 교체 필요(2탄) : 구글맵 iframe src */
+document.getElementById('mapFrame').src =
+  `https://maps.google.com/maps?q=${encodeURIComponent(`${VENUE_NAME} ${VENUE_HALL} ${VENUE_ADDR}`)}&t=&z=17&ie=UTF8&iwloc=&output=embed`;
 document.getElementById('mapCover').addEventListener('click', function () {
   this.classList.add('hidden');
   toast('지도를 확인해보세요');
