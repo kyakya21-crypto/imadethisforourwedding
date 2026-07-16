@@ -24,8 +24,9 @@
        2) og:url 메타 태그   → 동일 URL
        3) og:image 메타 태그 → 동일 URL + /hero.jpg
        4) KAKAO_KEY 상수     → (2탄에서 진행)
-       5) GAS_URL 상수       → (2탄에서 진행)
+       5) GAS_URL 상수       → 사진 업로드(Drive) 연동 시에만 필요, 계좌번호는 무관 (2탄에서 진행)
        6) DRIVE_URL 상수     → (2탄에서 진행)
+       7) ACCOUNTS 상수      → Ctrl+F "const ACCOUNTS" 검색 후 계좌번호 직접 기재
 -->
 <!DOCTYPE html>
 <html lang="ko">
@@ -55,23 +56,6 @@
     var WEDDING_DATE = '2026-11-07';
     var _month = new Date(WEDDING_DATE + 'T00:00:00+09:00').getMonth() + 1;
     document.documentElement.setAttribute('data-theme', 'month-' + _month);
-
-    function _todayKST() {
-      var now = new Date();
-      var kst = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
-      kst.setHours(0, 0, 0, 0);
-      return kst;
-    }
-    var _wedding = new Date(WEDDING_DATE + 'T00:00:00+09:00');
-    _wedding.setHours(0, 0, 0, 0);
-    var _today = _todayKST();
-    var _diffDays = Math.round((_wedding - _today) / 86400000);
-    var _d60 = new Date(_wedding); _d60.setDate(_d60.getDate() - 60);
-    var _d7after = new Date(_wedding); _d7after.setDate(_d7after.getDate() + 7);
-    var _cls = 'in-range';
-    if (_today < _d60) _cls = 'pre-wedding-mask';
-    else if (_today > _d7after) _cls = 'post-wedding';
-    document.documentElement.classList.add(_cls);
   })();
 </script>
 
@@ -182,8 +166,6 @@ img.interactive { pointer-events: auto; }
   --ink:#0E1C14; --cream:#F4F8F4; --primary:#2A6844; --primary-lt:#5A9870;
   --accent:#D4A820; --accent-dk:#A87E10; --muted:#4A7858; --line:#C8E4D0; --bg2:#E4F0E8; --white:#F8FFF8;
 }
-
-/* pre-wedding-mask / post-wedding 은 registry 섹션에서 사용 */
 
 /* ===================================================================
    레이아웃 공통
@@ -471,55 +453,10 @@ section { padding: 72px 20px; position: relative; }
   word-break: keep-all; overflow-wrap: break-word;
 }
 
-/* ===================================================================
-   7. RSVP
-   =================================================================== */
-.rsvp { background: var(--ink); color: var(--white); text-align: center; }
-.rsvp .sec-title, .rsvp .eyebrow { color: var(--white); }
-.rsvp .eyebrow { color: var(--primary-lt); }
-.rsvp p.desc { font-size: 14px; line-height: 1.9; color: rgba(255,255,255,0.75); margin-bottom: 32px; word-break: keep-all; }
-.rsvp-btn {
-  padding: 15px 34px; border-radius: 30px; border: 1px solid var(--accent);
-  background: transparent; color: var(--white); font-size: 14.5px; font-family: var(--sans);
-  white-space: nowrap; cursor: pointer;
-}
-
-.modal-overlay {
-  position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.5);
-  display: flex; align-items: flex-end; justify-content: center;
-  opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-}
-.modal-overlay.open { opacity: 1; pointer-events: auto; }
-.modal-sheet {
-  width: 100%; max-width: var(--max-w); max-height: 88dvh; overflow-y: auto;
-  background: var(--white); border-radius: 20px 20px 0 0; padding: 28px 22px calc(28px + env(safe-area-inset-bottom));
-  transform: translateY(24px); transition: transform 0.3s ease;
-}
-.modal-overlay.open .modal-sheet { transform: translateY(0); }
-.modal-title { font-family: var(--serif); font-size: 18px; text-align: center; margin-bottom: 22px; color: var(--ink); }
-.f-group { margin-bottom: 18px; }
-.f-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; display: block; }
-.f-radio-row { display: flex; gap: 10px; }
-.f-radio-row label {
-  flex: 1; text-align: center; padding: 11px 4px; border: 1px solid var(--line); border-radius: 8px;
-  font-size: 13.5px; color: var(--ink); cursor: pointer; white-space: nowrap;
-}
-.f-radio-row input { display: none; }
-.f-radio-row input:checked + span { color: var(--white); }
-.f-radio-row label:has(input:checked) { background: var(--primary); border-color: var(--primary); color: var(--white); }
-.f-input, .f-select {
-  width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px;
-  font-size: 14px; font-family: var(--sans); color: var(--ink); background: var(--white);
-}
-.f-submit {
-  width: 100%; padding: 15px; margin-top: 8px; border: none; border-radius: 30px;
-  background: var(--ink); color: var(--white); font-size: 15px; cursor: pointer; white-space: nowrap;
-}
 .f-close {
   position: absolute; top: 16px; right: 16px; width: 30px; height: 30px;
   border: none; background: transparent; color: var(--muted); font-size: 20px; cursor: pointer;
 }
-#busField { display: none; }
 
 /* ===================================================================
    8. 갤러리
@@ -549,9 +486,6 @@ section { padding: 72px 20px; position: relative; }
 /* ===================================================================
    9. 마음 전하실 곳
    =================================================================== */
-.registry-msg { text-align: center; font-size: 14px; color: var(--muted); line-height: 1.9; padding: 20px 0; word-break: keep-all; }
-html.pre-wedding-mask .registry-body, html.post-wedding .registry-body { display: none; }
-html:not(.pre-wedding-mask):not(.post-wedding) .registry-msg { display: none; }
 
 .acc { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
 .acc-head {
@@ -563,12 +497,16 @@ html:not(.pre-wedding-mask):not(.post-wedding) .registry-msg { display: none; }
 .acc-body { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
 .acc.open .acc-body { max-height: 800px; }
 .acc-inner { padding: 4px 18px 18px; }
+.acct-group { border-top: 1px solid var(--line); padding: 12px 0; }
+.acct-group:first-child { border-top: none; }
+.acct-relation { font-size: 12.5px; color: var(--muted); letter-spacing: 0.02em; margin-bottom: 6px; }
 .acct-row {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 12px 0; border-top: 1px solid var(--line);
+  padding: 4px 0;
 }
-.acct-row:first-child { border-top: none; }
 .acct-info { font-size: 13.5px; color: var(--ink); word-break: keep-all; }
+.acct-info.copyable { cursor: pointer; }
+.acct-info.copyable:active { opacity: 0.6; }
 .acct-info .bank { color: var(--muted); margin-right: 6px; }
 .acct-actions { display: flex; gap: 6px; flex-shrink: 0; }
 .acct-actions button {
@@ -647,7 +585,7 @@ footer .f-credit { font-size: 11px; opacity: 0.6; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 @media print {
-  .floating, .modal-overlay, .g-modal, .upload-overlay, .toast, .map-cover { display: none !important; }
+  .floating, .g-modal, .upload-overlay, .toast, .map-cover { display: none !important; }
 }
 </style>
 </head>
@@ -791,16 +729,6 @@ footer .f-credit { font-size: 11px; opacity: 0.6; }
   </section>
 
   <!-- ============================================================
-       7. RSVP
-  ============================================================ -->
-  <section class="rsvp">
-    <div class="eyebrow fade-up">RSVP</div>
-    <div class="sec-title fade-up">참석 의사 전달</div>
-    <p class="desc fade-up">소중한 걸음, 미리 알려주시면<br>따뜻하게 맞이할 준비를 하겠습니다.</p>
-    <button class="rsvp-btn fade-up" id="openRsvpBtn">참석 여부 전달하기</button>
-  </section>
-
-  <!-- ============================================================
        8. 갤러리
   ============================================================ -->
   <section class="gallery">
@@ -815,7 +743,6 @@ footer .f-credit { font-size: 11px; opacity: 0.6; }
   <section class="registry">
     <div class="eyebrow fade-up">Registry</div>
     <div class="sec-title fade-up">마음 전하실 곳</div>
-    <div class="registry-msg" id="registryMsg"></div>
     <div class="registry-body">
       <div class="acc fade-up" id="accGroom">
         <div class="acc-head" data-target="accGroom">
@@ -869,61 +796,6 @@ footer .f-credit { font-size: 11px; opacity: 0.6; }
   <svg viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
 </div>
 <audio id="bgmAudio" loop preload="metadata"></audio>
-
-<!-- RSVP 모달 -->
-<div class="modal-overlay" id="rsvpModal">
-  <div class="modal-sheet">
-    <button class="f-close" id="closeRsvpBtn">✕</button>
-    <div class="modal-title">참석 의사 전달</div>
-    <form id="rsvpForm">
-      <div class="f-group">
-        <span class="f-label">구분</span>
-        <div class="f-radio-row">
-          <label><input type="radio" name="side" value="신랑측" checked><span>신랑측</span></label>
-          <label><input type="radio" name="side" value="신부측"><span>신부측</span></label>
-        </div>
-      </div>
-      <div class="f-group">
-        <span class="f-label">성함</span>
-        <input class="f-input" type="text" id="rsvpName" required placeholder="성함을 입력해주세요">
-      </div>
-      <div class="f-group">
-        <span class="f-label">동반 인원 (본인 포함)</span>
-        <select class="f-select" id="rsvpCount">
-          <option value="1">1명</option>
-          <option value="2">2명</option>
-          <option value="3">3명</option>
-          <option value="4">4명</option>
-          <option value="5+">5명 이상</option>
-        </select>
-      </div>
-      <div class="f-group">
-        <span class="f-label">어린이 (만 5-8세)</span>
-        <select class="f-select" id="rsvpKids">
-          <option value="0">없음</option>
-          <option value="1">1명</option>
-          <option value="2">2명</option>
-          <option value="3+">3명 이상</option>
-        </select>
-      </div>
-      <div class="f-group">
-        <span class="f-label">참석 여부</span>
-        <div class="f-radio-row">
-          <label><input type="radio" name="attend" value="참석합니다" checked><span>참석합니다</span></label>
-          <label><input type="radio" name="attend" value="마음만 전해요"><span>마음만 전해요</span></label>
-        </div>
-      </div>
-      <div class="f-group" id="busField">
-        <span class="f-label">전세버스 탑승 여부</span>
-        <div class="f-radio-row">
-          <label><input type="radio" name="bus" value="탑승합니다" checked><span>탑승합니다</span></label>
-          <label><input type="radio" name="bus" value="탑승하지 않습니다"><span>탑승하지 않습니다</span></label>
-        </div>
-      </div>
-      <button type="submit" class="f-submit">전달하기</button>
-    </form>
-  </div>
-</div>
 
 <!-- 갤러리 모달 -->
 <div class="g-modal" id="galleryModal">
@@ -1225,79 +1097,6 @@ document.getElementById('btnTmap').addEventListener('click', function () {
   }
 });
 
-/* ---------------- RSVP 모달 + 스크롤 잠금 ---------------- */
-let _scrollY = 0;
-const rsvpModal = document.getElementById('rsvpModal');
-function openRsvpModal() {
-  _scrollY = window.scrollY;
-  document.body.style.position = 'fixed';
-  document.body.style.top = `-${_scrollY}px`;
-  document.body.style.width = '100%';
-  rsvpModal.classList.add('open');
-}
-function closeRsvpModal() {
-  document.body.style.position = '';
-  document.body.style.top = '';
-  document.body.style.width = '';
-  window.scrollTo(0, _scrollY);
-  rsvpModal.classList.remove('open');
-}
-document.getElementById('openRsvpBtn').addEventListener('click', openRsvpModal);
-document.getElementById('closeRsvpBtn').addEventListener('click', closeRsvpModal);
-
-document.querySelectorAll('input[name="attend"]').forEach(r => {
-  r.addEventListener('change', function () {
-    document.getElementById('busField').style.display = this.value === '참석합니다' ? 'block' : 'none';
-  });
-});
-
-document.getElementById('rsvpForm').addEventListener('submit', function (e) {
-  e.preventDefault();
-  const side = document.querySelector('input[name="side"]:checked').value;
-  const name = document.getElementById('rsvpName').value.trim();
-  const count = document.getElementById('rsvpCount').value;
-  const kids = document.getElementById('rsvpKids').value;
-  const attend = document.querySelector('input[name="attend"]:checked').value;
-  const busEl = document.querySelector('input[name="bus"]:checked');
-  const bus = (attend === '참석합니다' && busEl) ? busEl.value : '';
-
-  if (!name) { toast('성함을 입력해주세요'); return; }
-
-  if (GAS_URL === '') {
-    toast('현재 참석 전달 기능을 준비 중입니다 🙏');
-    return;
-  }
-
-  const storeKey = 'rsvp_submitted_' + name;
-  if (localStorage.getItem(storeKey)) {
-    if (!confirm('이미 참석 의사를 전달하셨습니다. 다시 수정하시겠습니까?')) return;
-  }
-
-  const fd = new FormData();
-  fd.append('action', 'rsvp');
-  fd.append('side', side);
-  fd.append('name', name);
-  fd.append('count', count);
-  fd.append('kids', kids);
-  fd.append('attend', attend);
-  fd.append('bus', bus);
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-  fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: fd, signal: controller.signal })
-    .then(() => {
-      clearTimeout(timeoutId);
-      localStorage.setItem(storeKey, '1');
-      closeRsvpModal();
-      toast('참석 의사를 전달했습니다 💌');
-    })
-    .catch(() => {
-      clearTimeout(timeoutId);
-      alert('전달에 실패했습니다. 잠시 후 다시 시도해주세요.');
-    });
-});
-
 /* ---------------- 갤러리 ---------------- */
 const galleryGrid = document.getElementById('galleryGrid');
 const galleryUrls = [];
@@ -1365,43 +1164,41 @@ gModal.addEventListener('touchend', function (e) {
   else if (dx < -60) showGalleryIdx(gIndex + 1);
 }, { passive: true });
 
-/* ---------------- 마음 전하실 곳 (Registry) ---------------- */
-const registryMsgEl = document.getElementById('registryMsg');
-if (document.documentElement.classList.contains('pre-wedding-mask')) {
-  const d60 = new Date(_weddingMidnight); d60.setDate(d60.getDate() - 60);
-  registryMsgEl.textContent = `${d60.getMonth() + 1}월 ${d60.getDate()}일부터 확인 가능합니다`;
-} else if (document.documentElement.classList.contains('post-wedding')) {
-  registryMsgEl.textContent = '마음 전하실 곳 안내가 종료되었습니다';
-}
-
-let accountsCache = null;
-function prefetchAccounts() {
-  if (GAS_URL === '') return;
-  fetch(GAS_URL + '?action=getAccounts')
-    .then(r => r.json())
-    .then(data => { accountsCache = data; })
-    .catch(() => {});
-}
-prefetchAccounts();
+/* ✏️  계좌번호는 여기에 직접 기재하세요. bank(은행명), number(계좌번호),
+   display(화면에 보일 문구, 생략 시 number 그대로 표시), kakao(카카오페이 송금 링크, 없으면 생략) */
+const ACCOUNTS = {
+  groom: [
+    { relation: '신랑 최병옥', bank: '새마을금고', number: '9003223055765' },
+    { relation: '신랑 아버지 최재휘', bank: '아빠은행', number: '123123123' },
+    { relation: '신랑 어머니 최영숙', bank: '엄마은행', number: '123123123' }
+  ],
+  bride: [
+    { relation: '신부 이원지', bank: '국민은행', number: '321321321' },
+    { relation: '신부 아버지 이상운', bank: '장인은행', number: '321321321' },
+    { relation: '신부 어머니 다카하시', bank: '장모은행', number: '321321321' }
+  ]
+};
 
 function renderAccountRow(acc) {
-  const row = document.createElement('div');
-  row.className = 'acct-row';
+  const group = document.createElement('div');
+  group.className = 'acct-group';
   const hasNumber = acc.number && acc.number.length > 0;
-  row.innerHTML = `
-    <div class="acct-info"><span class="bank">${acc.bank || ''}</span>${hasNumber ? (acc.display || acc.number) : '⚠ 계좌번호 미기재'}</div>
-    <div class="acct-actions">
-      ${acc.kakao ? `<button class="kakao" data-url="${acc.kakao}">카카오페이</button>` : ''}
-      <button class="copy" data-copy="${acc.number || ''}" ${hasNumber ? '' : 'disabled'}>복사</button>
+  group.innerHTML = `
+    <div class="acct-relation">${acc.relation || ''}</div>
+    <div class="acct-row">
+      <div class="acct-info${hasNumber ? ' copyable' : ''}" ${hasNumber ? `data-copy="${acc.number}"` : ''}><span class="bank">${acc.bank || ''}</span>${hasNumber ? (acc.display || acc.number) : '⚠ 계좌번호 미기재'}</div>
+      <div class="acct-actions">
+        ${acc.kakao ? `<button class="kakao" data-url="${acc.kakao}">카카오페이</button>` : ''}
+      </div>
     </div>`;
-  return row;
+  return group;
 }
 
 function renderAccounts(targetId, list) {
   const wrap = document.getElementById(targetId);
   wrap.innerHTML = '';
   if (!list || list.length === 0) {
-    wrap.innerHTML = '<div class="acct-row"><div class="acct-info">⚠ 계좌번호 미기재</div></div>';
+    wrap.innerHTML = '<div class="acct-group"><div class="acct-row"><div class="acct-info">⚠ 계좌번호 미기재</div></div></div>';
     return;
   }
   list.forEach(acc => wrap.appendChild(renderAccountRow(acc)));
@@ -1414,22 +1211,19 @@ document.querySelectorAll('.acc-head').forEach(head => {
     document.querySelectorAll('.acc').forEach(a => a.classList.remove('open'));
     if (!isOpen) {
       targetAcc.classList.add('open');
-      if (accountsCache) {
-        renderAccounts('groomAccounts', accountsCache.groom);
-        renderAccounts('brideAccounts', accountsCache.bride);
-      } else {
-        const targetInner = targetAcc.querySelector('.acc-inner');
-        if (!targetInner.innerHTML) targetInner.innerHTML = '<div class="acct-row"><div class="acct-info">⚠ 계좌번호 미기재</div></div>';
-      }
+      renderAccounts('groomAccounts', ACCOUNTS.groom);
+      renderAccounts('brideAccounts', ACCOUNTS.bride);
     }
   });
 });
 
 document.addEventListener('click', function (e) {
-  if (e.target.matches('.acct-actions button.copy')) {
-    const val = e.target.dataset.copy;
+  const copyTarget = e.target.closest('.acct-info.copyable');
+  if (copyTarget) {
+    const val = copyTarget.dataset.copy;
     if (!val) return;
     copyText(val).then(() => toast('계좌번호가 복사되었습니다'));
+    return;
   }
   if (e.target.matches('.acct-actions button.kakao')) {
     window.open(e.target.dataset.url, '_blank');
