@@ -24,9 +24,7 @@
        2) og:url 메타 태그   → 동일 URL
        3) og:image 메타 태그 → 동일 URL + /hero.jpg
        4) KAKAO_KEY 상수     → (2탄에서 진행)
-       5) GAS_URL 상수       → 사진 업로드(Drive) 연동 시에만 필요, 계좌번호는 무관 (2탄에서 진행)
-       6) DRIVE_URL 상수     → (2탄에서 진행)
-       7) ACCOUNTS 상수      → Ctrl+F "const ACCOUNTS" 검색 후 계좌번호 직접 기재
+       5) ACCOUNTS 상수      → Ctrl+F "const ACCOUNTS" 검색 후 계좌번호 직접 기재
 -->
 <!DOCTYPE html>
 <html lang="ko">
@@ -471,6 +469,7 @@ section { padding: 72px 20px; position: relative; }
   position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.94);
   display: flex; align-items: center; justify-content: center;
   opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+  touch-action: none; overscroll-behavior: contain;
 }
 .g-modal.open { opacity: 1; pointer-events: auto; }
 .g-modal img { max-width: 100%; max-height: 80dvh; object-fit: contain; }
@@ -478,6 +477,16 @@ section { padding: 72px 20px; position: relative; }
   position: absolute; top: calc(18px + env(safe-area-inset-top)); left: 0; right: 0;
   text-align: center; color: #fff; font-size: 13px; font-family: var(--sans); letter-spacing: 0.05em;
 }
+.g-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 42px; height: 42px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,0.16); color: #fff; font-size: 20px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  backdrop-filter: blur(2px);
+}
+.g-nav:active { background: rgba(255,255,255,0.3); }
+.g-prev { left: 12px; }
+.g-next { right: 12px; }
 .g-close {
   position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 16px;
   background: transparent; border: none; color: #fff; font-size: 26px; cursor: pointer;
@@ -516,37 +525,7 @@ section { padding: 72px 20px; position: relative; }
 .acct-actions button.kakao { background: #FEE500; border-color: #FEE500; }
 
 /* ===================================================================
-   10. 사진 공유
-   =================================================================== */
-.memory-btns { display: flex; flex-direction: column; gap: 12px; }
-.memory-btn {
-  padding: 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--white);
-  font-family: var(--sans); font-size: 14.5px; color: var(--ink); text-align: center;
-  cursor: pointer; white-space: nowrap;
-}
-.memory-btn.primary { background: var(--ink); color: var(--white); border: none; }
-
-.upload-overlay {
-  position: fixed; inset: 0; z-index: 250; background: var(--white);
-  display: flex; flex-direction: column;
-  transform: translateY(100%); transition: transform 0.35s ease;
-}
-.upload-overlay.open { transform: translateY(0); }
-.upload-head { padding: calc(18px + env(safe-area-inset-top)) 20px 14px; display: flex; justify-content: space-between; align-items: center; }
-.upload-head h3 { font-family: var(--serif); font-size: 16px; }
-.upload-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 0 4px; }
-.upload-thumb { aspect-ratio: 1; position: relative; background: var(--bg2); }
-.upload-thumb img, .upload-thumb .video-icon { width: 100%; height: 100%; object-fit: cover; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-.upload-thumb .status { position: absolute; top: 4px; right: 4px; font-size: 16px; }
-.upload-thumb .badge { position: absolute; bottom: 4px; left: 4px; right: 4px; background: rgba(200,50,50,0.9); color: #fff; font-size: 10px; text-align: center; border-radius: 4px; padding: 2px; }
-.upload-footer { padding: 16px 20px calc(16px + env(safe-area-inset-bottom)); }
-.upload-hint { text-align: center; font-size: 12.5px; color: var(--muted); margin-bottom: 10px; word-break: keep-all; }
-.upload-counter { text-align: center; font-size: 13px; margin-bottom: 8px; }
-.progress-bar-track { width: 100%; height: 4px; background: var(--line); border-radius: 4px; overflow: hidden; }
-.progress-bar-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.25s ease; }
-
-/* ===================================================================
-   11. 푸터 & 플로팅 버튼
+   10. 푸터 & 플로팅 버튼
    =================================================================== */
 footer {
   background: var(--ink); color: rgba(255,255,255,0.6); text-align: center; padding: 50px 20px calc(50px + env(safe-area-inset-bottom));
@@ -585,7 +564,7 @@ footer .f-credit { font-size: 11px; opacity: 0.6; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 @media print {
-  .floating, .g-modal, .upload-overlay, .toast, .map-cover { display: none !important; }
+  .floating, .g-modal, .toast, .map-cover { display: none !important; }
 }
 </style>
 </head>
@@ -762,20 +741,7 @@ footer .f-credit { font-size: 11px; opacity: 0.6; }
   </section>
 
   <!-- ============================================================
-       10. 사진 공유하기
-  ============================================================ -->
-  <section class="memory">
-    <div class="eyebrow fade-up">Memory</div>
-    <div class="sec-title fade-up">사진 공유하기</div>
-    <div class="memory-btns fade-up">
-      <button class="memory-btn primary" id="btnQuickUpload">📷 간편 보내기 (4MB 이하)</button>
-      <button class="memory-btn" id="btnDriveUpload">🖼 고화질 원본 (구글 드라이브)</button>
-    </div>
-    <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none">
-  </section>
-
-  <!-- ============================================================
-       11. 푸터
+       10. 푸터
   ============================================================ -->
   <footer>
     <div class="f-msg">저희 두 사람, 함께 걸을 앞날을<br>여러분과 함께 나누고 싶습니다.<br>감사합니다.</div>
@@ -801,22 +767,11 @@ footer .f-credit { font-size: 11px; opacity: 0.6; }
 <div class="g-modal" id="galleryModal">
   <div class="g-counter" id="gCounter">1 / 1</div>
   <button class="g-close" id="gClose">✕</button>
+  <button class="g-nav g-prev" id="gPrev">‹</button>
   <img id="gModalImg" src="" alt="gallery photo">
+  <button class="g-nav g-next" id="gNext">›</button>
 </div>
 
-<!-- 업로드 오버레이 -->
-<div class="upload-overlay" id="uploadOverlay">
-  <div class="upload-head">
-    <h3>사진 · 영상 보내기</h3>
-    <button class="f-close" style="position:static" id="uploadClose">✕</button>
-  </div>
-  <div class="upload-grid" id="uploadGrid"></div>
-  <div class="upload-footer">
-    <div class="upload-hint">화면을 그대로 유지해 주세요</div>
-    <div class="upload-counter" id="uploadCounter">0 / 0</div>
-    <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div>
-  </div>
-</div>
 
 <div class="toast" id="toast"></div>
 
@@ -858,9 +813,7 @@ const VENUE_HALL  = '펠리스홀';
 const VENUE_ADDR  = '경기 평택시 장안웃길 56';
 
 /* ── 외부 서비스 (※ 1탄 배포 시에는 빈칸으로 두세요. 2탄에서 채웁니다!) ── */
-const GAS_URL   = ''; /* 교체 필요(2탄) : 구글 앱스 스크립트 배포 URL */
 const KAKAO_KEY = ''; /* 교체 필요(2탄) : 카카오 JS 앱 키 */
-const DRIVE_URL = ''; /* 교체 필요(2탄) : 구글 드라이브 폴더 URL */
 
 /* =================================================================== */
 
@@ -1142,6 +1095,14 @@ galleryGrid.addEventListener('click', function (e) {
   if (item) openGallery(Number(item.dataset.index));
 });
 document.getElementById('gClose').addEventListener('click', closeGallery);
+document.getElementById('gPrev').addEventListener('click', function (e) {
+  e.stopPropagation();
+  showGalleryIdx(gIndex - 1);
+});
+document.getElementById('gNext').addEventListener('click', function (e) {
+  e.stopPropagation();
+  showGalleryIdx(gIndex + 1);
+});
 gModal.addEventListener('click', function (e) {
   if (e.target === gModal) closeGallery();
 });
@@ -1156,6 +1117,9 @@ gModal.addEventListener('touchstart', function (e) {
   gTouchStartX = e.touches[0].clientX;
   gTouchStartY = e.touches[0].clientY;
 }, { passive: true });
+gModal.addEventListener('touchmove', function (e) {
+  e.preventDefault();
+}, { passive: false });
 gModal.addEventListener('touchend', function (e) {
   const dx = e.changedTouches[0].clientX - gTouchStartX;
   const dy = e.changedTouches[0].clientY - gTouchStartY;
@@ -1249,108 +1213,6 @@ function copyText(text) {
 function cpUrl() {
   copyText(SITE_URL).then(() => toast('청첩장 주소가 복사되었습니다'));
 }
-
-/* ---------------- 사진 공유하기 (Memory) ---------------- */
-const memD0 = new Date(_weddingMidnight);
-const memD7 = new Date(_weddingMidnight); memD7.setDate(memD7.getDate() + 7);
-function inUploadWindow() {
-  return _todayMidnight >= memD0 && _todayMidnight <= memD7;
-}
-
-document.getElementById('btnQuickUpload').addEventListener('click', function () {
-  if (GAS_URL === '') { toast('현재 업로드 기능을 준비 중입니다 🙏'); return; }
-  if (!inUploadWindow()) { toast('사진 업로드 가능 기간이 아닙니다'); return; }
-  document.getElementById('fileInput').click();
-});
-document.getElementById('btnDriveUpload').addEventListener('click', function () {
-  if (DRIVE_URL === '') { toast('구글 드라이브 주소를 아직 등록하지 않았습니다'); return; }
-  window.open(DRIVE_URL, '_blank');
-});
-
-const uploadOverlay = document.getElementById('uploadOverlay');
-const uploadGrid = document.getElementById('uploadGrid');
-const uploadCounter = document.getElementById('uploadCounter');
-const progressFill = document.getElementById('progressFill');
-
-document.getElementById('fileInput').addEventListener('change', function (e) {
-  const files = Array.from(e.target.files);
-  if (files.length === 0) return;
-  uploadGrid.innerHTML = '';
-  uploadOverlay.classList.add('open');
-  let doneCount = 0, successCount = 0, oversizeCount = 0, failCount = 0;
-  uploadCounter.textContent = `0 / ${files.length}`;
-  progressFill.style.width = '0%';
-
-  files.forEach((file, idx) => {
-    const thumb = document.createElement('div');
-    thumb.className = 'upload-thumb';
-    if (file.type.startsWith('image/')) {
-      const img = document.createElement('img');
-      const objUrl = URL.createObjectURL(file);
-      img.src = objUrl;
-      thumb.appendChild(img);
-      thumb._objUrl = objUrl;
-    } else {
-      thumb.innerHTML = '<div class="video-icon">🎬</div>';
-    }
-    const statusEl = document.createElement('div');
-    statusEl.className = 'status';
-    thumb.appendChild(statusEl);
-    uploadGrid.appendChild(thumb);
-
-    function finish() {
-      doneCount++;
-      uploadCounter.textContent = `${doneCount} / ${files.length}`;
-      progressFill.style.width = `${Math.round((doneCount / files.length) * 100)}%`;
-      if (thumb._objUrl) { URL.revokeObjectURL(thumb._objUrl); }
-      if (doneCount === files.length) {
-        setTimeout(() => {
-          if (failCount === files.length) toast('업로드에 실패했습니다');
-          else if (oversizeCount > 0) toast(`${successCount}장 전송 완료 · ${oversizeCount}개는 용량 초과로 제외되었습니다`);
-          else toast(`${successCount}장 전송이 완료되었습니다`);
-        }, 300);
-      }
-    }
-
-    if (file.size > 4 * 1024 * 1024) {
-      const badge = document.createElement('div');
-      badge.className = 'badge';
-      badge.textContent = '용량초과';
-      thumb.appendChild(badge);
-      statusEl.textContent = '❌';
-      oversizeCount++;
-      finish();
-      return;
-    }
-
-    statusEl.textContent = '⏳';
-    const reader = new FileReader();
-    reader.onload = function () {
-      const base64 = reader.result.split(',')[1];
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
-      fetch(GAS_URL, {
-        method: 'POST', mode: 'no-cors', signal: controller.signal,
-        body: JSON.stringify({ action: 'upload', fileName: file.name, mimeType: file.type, fileData: base64 })
-      }).then(() => {
-        clearTimeout(timeoutId);
-        statusEl.textContent = '✅';
-        successCount++;
-        finish();
-      }).catch(() => {
-        clearTimeout(timeoutId);
-        statusEl.textContent = '❌';
-        failCount++;
-        finish();
-      });
-    };
-    reader.readAsDataURL(file);
-  });
-});
-document.getElementById('uploadClose').addEventListener('click', function () {
-  uploadOverlay.classList.remove('open');
-  document.getElementById('fileInput').value = '';
-});
 
 /* ---------------- 카카오톡 공유 / 주소 복사 ---------------- */
 document.getElementById('btnKakaoShare').addEventListener('click', function () {
