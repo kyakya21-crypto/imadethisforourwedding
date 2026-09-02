@@ -1050,29 +1050,41 @@ document.getElementById('btnTmap').addEventListener('click', function () {
   }
 });
 
-/* ---------------- 갤러리 ---------------- */
+/* ---------------- 갤러리 (실제로 존재하는 사진만 표시) ---------------- */
 const galleryGrid = document.getElementById('galleryGrid');
 const galleryUrls = [];
+let GALLERY_TOTAL = 0; // 실제 로드에 성공한 사진 개수 (아래에서 채워짐)
+
+const _galleryCandidates = [];
 for (let i = 1; i <= GALLERY_COUNT; i++) {
   const url = `./gallery/${i}.jpg`;
-  galleryUrls.push(url);
   const item = document.createElement('div');
   item.className = 'g-item';
-  item.dataset.index = i - 1;
   const img = document.createElement('img');
-  img.src = url;
   img.loading = 'lazy';
   img.alt = `wedding photo ${i}`;
-  img.onerror = function () {
-    this.onerror = null;
-    const svg = `data:image/svg+xml,${encodeURIComponent(
-      `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='#F4EDE8'/><text x='50%' y='50%' font-size='16' fill='#8A7868' text-anchor='middle' dominant-baseline='middle' font-family='sans-serif'>Photo ${i}</text></svg>`
-    )}`;
-    this.src = svg;
-  };
   item.appendChild(img);
-  galleryGrid.appendChild(item);
+  galleryGrid.appendChild(item); // 순서 유지를 위해 자리만 먼저 배치
+  _galleryCandidates.push({ item, img, url });
 }
+
+Promise.all(_galleryCandidates.map(({ url }) => new Promise((resolve) => {
+  const tester = new Image();
+  tester.onload = () => resolve(true);
+  tester.onerror = () => resolve(false);
+  tester.src = url;
+}))).then((results) => {
+  _galleryCandidates.forEach(({ item, img, url }, i) => {
+    if (results[i]) {
+      img.src = url;
+      item.dataset.index = galleryUrls.length;
+      galleryUrls.push(url);
+    } else {
+      item.remove(); // 존재하지 않는 사진은 그리드에서 완전히 제거
+    }
+  });
+  GALLERY_TOTAL = galleryUrls.length;
+});
 
 const gModal = document.getElementById('galleryModal');
 const gModalImg = document.getElementById('gModalImg');
@@ -1081,13 +1093,13 @@ let gIndex = 0;
 function openGallery(idx) {
   gIndex = idx;
   gModalImg.src = galleryGrid.children[idx].querySelector('img').src;
-  gCounter.textContent = `${idx + 1} / ${GALLERY_COUNT}`;
+  gCounter.textContent = `${idx + 1} / ${GALLERY_TOTAL}`;
   gModal.classList.add('open');
 }
 function closeGallery() { gModal.classList.remove('open'); }
 function showGalleryIdx(idx) {
-  if (idx < 0) idx = GALLERY_COUNT - 1;
-  if (idx >= GALLERY_COUNT) idx = 0;
+  if (idx < 0) idx = GALLERY_TOTAL - 1;
+  if (idx >= GALLERY_TOTAL) idx = 0;
   openGallery(idx);
 }
 galleryGrid.addEventListener('click', function (e) {
