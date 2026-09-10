@@ -400,22 +400,6 @@ section { padding: 72px 20px; position: relative; }
 }
 
 /* ===================================================================
-   5. 식순
-   =================================================================== */
-.prog-list { display: flex; flex-direction: column; gap: 0; }
-.prog-item {
-  display: flex; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--line);
-}
-.prog-item:last-child { border-bottom: none; }
-.prog-time { font-family: var(--display); font-size: 16px; color: var(--primary); min-width: 58px; flex-shrink: 0; }
-.prog-body .prog-name { font-family: var(--sans); font-size: 15px; font-weight: 500; margin-bottom: 4px; word-break: keep-all; }
-.prog-body .prog-desc { font-family: var(--sans); font-size: 13px; color: var(--muted); line-height: 1.7; word-break: keep-all; overflow-wrap: break-word; }
-.prog-item.highlight { background: var(--bg2); padding: 16px 14px; border-radius: 10px; border-bottom: none; margin: 2px 0; }
-.prog-note {
-  margin-top: 24px; text-align: center; font-size: 12.5px; color: var(--muted); word-break: keep-all;
-}
-
-/* ===================================================================
    6. 오시는 길
    =================================================================== */
 .venue-name { text-align: center; font-family: var(--serif); font-size: 19px; margin-bottom: 6px; word-break: keep-all; }
@@ -621,41 +605,6 @@ footer .f-credit { font-size: 11px; opacity: 0.6; }
     <div class="cal-month fade-up" id="calMonthLabel">2026. 11</div>
     <div class="cal-grid fade-up" id="calGrid"></div>
     <button class="add-cal-btn fade-up" id="addCalBtn">일정에 추가하기</button>
-  </section>
-
-  <!-- ============================================================
-       5. 식순 안내
-  ============================================================ -->
-  <section class="program">
-    <div class="eyebrow fade-up">Program</div>
-    <div class="sec-title fade-up">식순 안내</div>
-    <div class="prog-list">
-      <div class="prog-item fade-up">
-        <div class="prog-time">13:00</div>
-        <div class="prog-body"><div class="prog-name">하객 맞이</div><div class="prog-desc">신랑 신부가 로비에서 하객을 맞이합니다.</div></div>
-      </div>
-      <div class="prog-item fade-up">
-        <div class="prog-time">13:00</div>
-        <div class="prog-body"><div class="prog-name">식사 시작</div><div class="prog-desc">피로연장에서 미리 식사를 즐기실 수 있습니다.</div></div>
-      </div>
-      <div class="prog-item highlight fade-up">
-        <div class="prog-time">13:30</div>
-        <div class="prog-body"><div class="prog-name">홀 입실 완료</div><div class="prog-desc">본식 시작 전 펠리스홀 착석을 부탁드립니다.</div></div>
-      </div>
-      <div class="prog-item fade-up">
-        <div class="prog-time">13:40</div>
-        <div class="prog-body"><div class="prog-name">본식 시작</div><div class="prog-desc">신랑 신부의 예식이 시작됩니다.</div></div>
-      </div>
-      <div class="prog-item fade-up">
-        <div class="prog-time">14:10</div>
-        <div class="prog-body"><div class="prog-name">기념 사진 촬영</div><div class="prog-desc">양가 가족, 친지, 지인분들과 순서대로 촬영합니다.</div></div>
-      </div>
-      <div class="prog-item fade-up">
-        <div class="prog-time">14:40</div>
-        <div class="prog-body"><div class="prog-name">행사 종료</div><div class="prog-desc">즐거운 시간 함께해 주셔서 감사합니다.</div></div>
-      </div>
-    </div>
-    <div class="prog-note fade-up">진행 상황에 따라 시간은 다소 변동될 수 있습니다</div>
   </section>
 
   <!-- ============================================================
@@ -1253,23 +1202,8 @@ const fabBgm = document.getElementById('fabBgm');
 bgmAudio.src = `./${BGM_FILE}`;
 let bgmPlaying = false;
 
-function tryBgmAutoplay() {
-  const p = bgmAudio.play();
-  if (p !== undefined) {
-    p.then(() => { bgmPlaying = true; fabBgm.classList.add('spinning'); })
-     .catch(() => { bgmPlaying = false; });
-  }
-}
 bgmAudio.addEventListener('error', function () { console.warn('BGM 파일을 불러올 수 없습니다.'); });
-tryBgmAutoplay();
-
-['touchstart', 'click', 'scroll'].forEach(ev => {
-  document.addEventListener(ev, function retryBgm() {
-    if (!bgmPlaying) {
-      bgmAudio.play().then(() => { bgmPlaying = true; fabBgm.classList.add('spinning'); }).catch(() => {});
-    }
-  }, { once: true, passive: true });
-});
+/* 자동재생 없음 — 하단 플로팅 버튼을 눌러야만 재생 시작 */
 
 fabBgm.addEventListener('click', function () {
   if (bgmPlaying) {
